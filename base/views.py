@@ -6,7 +6,12 @@ from rest_framework.decorators import api_view #decorators allows a function to 
 from .serializers import * #calling all the serializers from serializers.py for conversion of objects into json and vice-versa.
 from rest_framework.response import Response #importing response class from response module of rest_framework API to send response using GenericAPIView
 from rest_framework import status #importing status module from rest framework to include status wherever necessary manually.
+from rest_framework.permissions import IsAuthenticated #permission module in rest framework contains information related to API permissions such as only user that has logged in can gain permission to the API, permissions according to the type of logged in user, IsAuthenticated class from permissions module allows only logged in or authenticated user to make requests.
+from django.contrib.auth import authenticate #auth module of django consists of all aspects of authentication such as user table, group, permissions etc. authenticate function of this module helps to verify the email and password provided by the user to check if the user is an authenticated user.
+
+
 # Create your views here.
+
 
 # @api_view()
 # def department(request): #the api_view decorator converts the department function into API function based view but not using the @api_view() will let this function to stay normal in which front-end cannot request. this is another method to form API view class but here, all the CRUD logics must be defined and logics related to authentication, filters, permission are difficult to define in this view which is easy to define in class based views.
@@ -36,6 +41,7 @@ class ResourceView(GenericAPIView): #converting resourceview class into api view
 class ResourceDetailView(GenericAPIView): #creating a new class to define the functions of update, delete or get a specific ID of a model. 
     queryset = Resource.objects.all()
     serializer_class = ResourceSerializer
+    #permission_classes = [IsAuthenticated] #this attribute is already defined in genericapiview, isauthenticated checks whether credentials is sent from the user in front-end and also checks whether requesting user is from the user table, 
           
     def get(self,request,pk): # making a different get function for get single retrieve. specific ID from url gets assigned to pk that gets passed to this get method in the url sent by the front-end user. not adding pk parameter can show error.
         try: #using try statement to eliminate exception error of 500 internal server error when client sends improper request.
@@ -64,7 +70,17 @@ class ResourceDetailView(GenericAPIView): #creating a new class to define the fu
             return Response('Data Not found!', status=status.HTTP_404_NOT_FOUND)
         queryset.delete()
         return Response('Data deleted!')
-        
+    
+    
+@api_view(['POST']) #a decorator with parameter "POST" method to post the email and password sent by the front-end
+def login(request): #a compulsory request parameter as request is always passed by the Url to the view or method. self parameter is not necessary as it is not a method of class.
+    email = request.data.get('email') #getting the email data as a JSON through the email field that is input by the front end user and assigning it to email variable. serializer is not required in this case as we are only doing verification of the user and no CRUD operation needs to be done for conversion of JSON to object or vice-versa.
+    password = request.data.get('password')
+    user = authenticate(username=email,password=password) # checks the given email and password with the registered list of username and password. if the data matches, the same user is returned as an object to the assigned user variable, but if no match occurs, then the variable user gets assigned as 'None'.
+    if user == None:
+        return Response('Email or password is incorrect!') # case when the data provided by the front-end does not match the data registered in the user table.
+    else:
+        pass        
             
             
 # class ResourceView(ModelViewSet):

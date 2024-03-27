@@ -13,7 +13,7 @@ class User(AbstractUser): #making custom user table, every important aspects of 
     
     #the user table should always be created at the first because making it later returns errors.
     
-    
+
 class Department(models.Model):
     name = models.CharField(max_length=300)
     
