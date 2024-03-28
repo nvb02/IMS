@@ -1,13 +1,15 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser #to make a custom user table to create certain changes. in the models class of auth, the users are defined. in abstractuser, the logics of users are hidden but are usable to create a custom user table.
 
+
 # Create your models here.
 
 class User(AbstractUser): #making custom user table, every important aspects of user sessions,login,logout are stored in AbstractUser class which is crucial that is inherited here.
     email = models.EmailField(unique=True) #email is a unique identifier to define the user that should be unique for every different user. unique=true ensures that the same value is not used multiple times in the same field.
     password = models.CharField(max_length=300) #passwords get encrypted and increases in size and stored in db that is why the length of password should be huge.
     username = models.CharField(max_length=300,default='username') # changing or overwriting the user table already defined. in django's user table, the username field is defined as unique stating that username and password is a must to login. the default value here states that if left empty, the phrase username will be stored without any null value.
-
+    
+    SearchableFields = ['email','username'] #assigning email and username objects as searchable field for token requirement or purpose.
     USERNAME_FIELD = 'email' #the functionality of this object is that the main fields changes from username:password to email:password.
     REQUIRED_FIELDS = ['username'] #required field is stated for username as it gets neglected when main fields become email and password, django also states that username field should be provided and is highly needed.
     

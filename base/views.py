@@ -2,13 +2,16 @@ from django.shortcuts import render
 from rest_framework.viewsets import ModelViewSet #to be used to transform a class into an API view.
 from .models import * #importing everything from models.py into views.py
 from rest_framework.generics import GenericAPIView # a view class that must be inherited to convert normal class into api view class where logics should be written manually.
-from rest_framework.decorators import api_view #decorators allows a function to be run before the other function.
+from rest_framework.decorators import api_view #decorators allows a function to be run before the other function. used in the login function to allow it to become a part of API view.
+from rest_framework.decorators import permission_classes #to define permissions to the API class. in this case, using it in login function.
 from .serializers import * #calling all the serializers from serializers.py for conversion of objects into json and vice-versa.
 from rest_framework.response import Response #importing response class from response module of rest_framework API to send response using GenericAPIView
 from rest_framework import status #importing status module from rest framework to include status wherever necessary manually.
 from rest_framework.permissions import IsAuthenticated #permission module in rest framework contains information related to API permissions such as only user that has logged in can gain permission to the API, permissions according to the type of logged in user, IsAuthenticated class from permissions module allows only logged in or authenticated user to make requests.
 from django.contrib.auth import authenticate #auth module of django consists of all aspects of authentication such as user table, group, permissions etc. authenticate function of this module helps to verify the email and password provided by the user to check if the user is an authenticated user.
-
+from rest_framework.authtoken.models import Token #importing token table from authtoken app that has stored tokens for users.
+from rest_framework.permissions import AllowAny #AllowAny permission class gives access to anyone neglecting the need for a valid or authenticated user. this is imported to be used in the login API since all the other APIs have IsAuthenticated class logic.
+from django.contrib.auth.hashers import make_password #make password function to encrypt the password to store during registration
 
 # Create your views here.
 
@@ -71,17 +74,33 @@ class ResourceDetailView(GenericAPIView): #creating a new class to define the fu
         queryset.delete()
         return Response('Data deleted!')
     
+@api_view(['POST']) 
+@permission_classes([AllowAny,]) 
+def register(request): # a user needs to be registered to experience a successful login. we create a user data in the user table.
     
-@api_view(['POST']) #a decorator with parameter "POST" method to post the email and password sent by the front-end
+    serializer = UserSerializer(data=request.data) #email and password is sent to the request from front-end which is passed to the serializer
+    if serializer.is_valid(): #validation is necessary specially incase for emails as it needs to be unique. the given valid method checks whether the value is sent to the required field or not, and whether the nature of value matches the field value or not. incase for unique=true, it also checks for duplicacy.
+        password = request.data.get('password') #getting the value of password which is not encrypted from the password key on the request data.
+        hash_password = make_password(password) #make_password encrypts the password and returns it to the "hash_password" variable. 
+        a = serializer.save() #if data is valid, save function creates the data and assigns the saved data as an object to variable 'a'.
+        a.password = hash_password #changing the unencrypted serialized password stored in 'a' variable to hash_password (encrypted password)
+        a.save() #saving the 'a' variable to the db.
+        return Response('User created!') #response to front-end.
+    else: #if data sent is not valid
+        return Response(serializer.errors) #sending error message occured to the front-end.
+        
+    
+@api_view(['POST']) #a decorator with parameter "POST" method to post the email and password sent by the front-end.
+@permission_classes([AllowAny,]) #when request is made to the login API, the AllowAny class of permission is run making the API accessible to any user without validity. the default permission class of IsAuthenticated is now overwritten by the AllowAny class on the following login function or view only.
 def login(request): #a compulsory request parameter as request is always passed by the Url to the view or method. self parameter is not necessary as it is not a method of class.
     email = request.data.get('email') #getting the email data as a JSON through the email field that is input by the front end user and assigning it to email variable. serializer is not required in this case as we are only doing verification of the user and no CRUD operation needs to be done for conversion of JSON to object or vice-versa.
     password = request.data.get('password')
-    user = authenticate(username=email,password=password) # checks the given email and password with the registered list of username and password. if the data matches, the same user is returned as an object to the assigned user variable, but if no match occurs, then the variable user gets assigned as 'None'.
+    user = authenticate(username=email,password=password) # checks the given email and password with the registered list of username and password. if the data matches, the same user is returned as an object to the assigned user variable, but if no match occurs, then the variable user gets assigned as 'None'. Returns only one user incase of true as only one user exist for a specific email and pw. every user receives unique token.
     if user == None:
         return Response('Email or password is incorrect!') # case when the data provided by the front-end does not match the data registered in the user table.
     else:
-        pass        
-            
+        token,_ = Token.objects.get_or_create(user=user) # get_or_create is a mixed query of Object Relation Manager that returns tuple values(Token and bool). it initially gets the token object from the user field of token table that matches with the logged in user of this function and assigns the token object with the user(left one) key to the token variable of this login function. if user is found on the token table, the token object and "true" bool value is returned to this variable which can be sent as a response but if user is not found, 'false' value is returned instead of error occurence. incase of false, create query runs from get_or_create that makes a user value in the user field and creates the token object. the token object created is then assigned to the token variable. the key value for key field gets auto-created that can be retrieved from object to send the response. "_" variable is assigned for boolean value and "token" variable is assigned for token value.
+        return Response(token.key) #sending the key value from key attribute of the retrieved or created token object to the front-end user that can be used to make requests to the API.
             
 # class ResourceView(ModelViewSet):
 #     queryset = Resource.objects.all()

@@ -40,7 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'base',
     'rest_framework', #defining django rest framework is installed in order to use the scripts of this module when called.
-    'rest_framework.authtoken' #to define an authenticated user through the use of tokens when email and password provided by the front-end user matches the data in the user table to allow him or her to make requests. authtoken is not predefined by default and must be additionally defined to be used because many other ways exist to define an authenticated user.
+    'rest_framework.authtoken' #token based authentication, using auth token module in the installed apps to define an authenticated user through the use of tokens when email and password provided by the front-end user matches the data in the user table to allow him or her to make requests. authtoken is not predefined by default and must be additionally defined to be used because many other ways exist to define an authenticated user. authtoken model consists of token related model such as logic of storing and creation of tokens
 ]
 
 MIDDLEWARE = [
@@ -126,9 +126,9 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-REST_FRAMEWORK = {
-    'DEFAULT_PERMISSION_CLASSES' : ['rest_framework.permissions.IsAuthenticated',], #defining a default permission class to be used on all the api views so that only authenticated user can make requests.
+REST_FRAMEWORK = { #dictionary of rest_framework to add certain rules.
+    'DEFAULT_PERMISSION_CLASSES' : ['rest_framework.permissions.IsAuthenticated',], #defining a default permission class to be used on all the api views (in this case, token based authentication) so that only authenticated user can make requests. IsAuthenticated method asks for token from the front-end users and checks if it is of the user or not.
     'DEFAULT_AUTHENTICATION_CLASSES' : [
         'rest_framework.authentication.TokenAuthentication'
-    ]
+    ] #making our project as the token based authentication project.
 } 

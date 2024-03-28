@@ -13,4 +13,6 @@ urlpatterns = [
     path('vendor/<int:pk>/',VendorView.as_view({'get':'retrieve','put':'update','delete':'destroy'})),
     path('purchase/',PurchaseView.as_view({'get':'list','post':'create'})),
     path('purchase/<int:pk>/',PurchaseView.as_view({'get':'retrieve','put':'update','delete':'destroy'})),
+    path('login/',login),
+    path('register/',register),
 ]

@@ -4,4 +4,7 @@ from .models import User #importing user table from models.py in admin panel to 
 
 # Register your models here.
 
-admin.site.register(User) #registering the user table on the admin panel or admin.py
+@admin.register(User) #registering the user table on the admin panel or admin.py
+class UserAdmin(admin.ModelAdmin):
+    search_fields = User.SearchableFields #creating search field variable to search needed to be performed for token purpose.
+
