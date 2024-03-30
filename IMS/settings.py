@@ -127,7 +127,7 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 REST_FRAMEWORK = { #dictionary of rest_framework to add certain rules.
-    'DEFAULT_PERMISSION_CLASSES' : ['rest_framework.permissions.IsAuthenticated',], #defining a default permission class to be used on all the api views (in this case, token based authentication) so that only authenticated user can make requests. IsAuthenticated method asks for token from the front-end users and checks if it is of the user or not.
+    'DEFAULT_PERMISSION_CLASSES' : ['rest_framework.permissions.IsAuthenticated','base.permissions.CustomModelPermission'], #defining a default permission class to be used on all the api views (in this case, token based authentication) so that only authenticated user can make requests. IsAuthenticated method asks for token from the front-end users and checks if it is of the user or not.
     'DEFAULT_AUTHENTICATION_CLASSES' : [
         'rest_framework.authentication.TokenAuthentication'
     ] #making our project as the token based authentication project.

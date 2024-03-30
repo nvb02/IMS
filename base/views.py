@@ -11,7 +11,11 @@ from rest_framework.permissions import IsAuthenticated #permission module in res
 from django.contrib.auth import authenticate #auth module of django consists of all aspects of authentication such as user table, group, permissions etc. authenticate function of this module helps to verify the email and password provided by the user to check if the user is an authenticated user.
 from rest_framework.authtoken.models import Token #importing token table from authtoken app that has stored tokens for users.
 from rest_framework.permissions import AllowAny #AllowAny permission class gives access to anyone neglecting the need for a valid or authenticated user. this is imported to be used in the login API since all the other APIs have IsAuthenticated class logic.
+from rest_framework.permissions import IsAuthenticated #to ensure that a valid or authenticated logged in user requests to API for data.
 from django.contrib.auth.hashers import make_password #make password function to encrypt the password to store during registration
+from rest_framework.permissions import DjangoModelPermissions #to allow users to request to API according to his/her allowed permissions or group permissions on the basis of his/her role.
+from .permissions import CustomModelPermission #to apply the logic of overwritten DjangoModelPermissions regarding get request.
+from django.contrib.auth.models import Group #to bring data from the group from auth model of user table for query purpose.
 
 # Create your views here.
 
@@ -23,6 +27,8 @@ from django.contrib.auth.hashers import make_password #make password function to
 class DepartmentView(ModelViewSet): # inheriting imported ModelViewSet into normal DepartmentView class to convert it into an API View Class, any project from front-end not necessarily django can now request this view and run CRUD Operations (in this class, data control operation) giving flexibility to companies incase of alterations of front-end.
     queryset = Department.objects.all() #there are other ways to make API view class but when ModelViewSet is inherited to make API class, queryset variable must be defined. queryset enables or allows CRUD operation to be performed on the department table and all of its components. define "objects.all" to the model or table where CRUD operation needs to be performed where CRUD methods or logics are already predefined. the name 'queryset' must be defined as it is because ModelViewSet calls this object from its defined methods which is why spelling errors and pascal case must be considered.
     serializer_class = DepartmentSerializer #defining serializer_class variable where DepartmentSerializer will convert Department model object into json, and the json data coming from request is converted into object through this serializer for this model.
+    
+    #permission_classes = [IsAuthenticated, CustomModelPermissions] #Multiple permissions can be defined in the list.
     
 class ResourceView(GenericAPIView): #converting resourceview class into api view class through GenericAPIView
     queryset = Resource.objects.all()
@@ -102,6 +108,15 @@ def login(request): #a compulsory request parameter as request is always passed 
         token,_ = Token.objects.get_or_create(user=user) # get_or_create is a mixed query of Object Relation Manager that returns tuple values(Token and bool). it initially gets the token object from the user field of token table that matches with the logged in user of this function and assigns the token object with the user(left one) key to the token variable of this login function. if user is found on the token table, the token object and "true" bool value is returned to this variable which can be sent as a response but if user is not found, 'false' value is returned instead of error occurence. incase of false, create query runs from get_or_create that makes a user value in the user field and creates the token object. the token object created is then assigned to the token variable. the key value for key field gets auto-created that can be retrieved from object to send the response. "_" variable is assigned for boolean value and "token" variable is assigned for token value.
         return Response(token.key) #sending the key value from key attribute of the retrieved or created token object to the front-end user that can be used to make requests to the API.
             
+            
+@api_view(['GET']) #getting the list of groups from db.
+@permission_classes([AllowAny,]) #since it is filled during registration.
+def group_listing(request):
+    group_objs = Group.objects.all() #retrieving the objects of group model from db to group_objs.
+    serializer = GroupSerializer(group_objs, many=True) #converting every single object of group table into JSON and since there are list of objects so, many should be equal to true.
+    return Response(serializer.data) # giving the response of serialized JSON data and no validation is required because data is coming from db so no error can occur.
+
+
 # class ResourceView(ModelViewSet):
 #     queryset = Resource.objects.all()
 #     serializer_class = ResourceSerializer

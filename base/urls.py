@@ -15,4 +15,5 @@ urlpatterns = [
     path('purchase/<int:pk>/',PurchaseView.as_view({'get':'retrieve','put':'update','delete':'destroy'})),
     path('login/',login),
     path('register/',register),
+    path('role/',group_listing), # calling the function based view of group_listing through role/
 ]
