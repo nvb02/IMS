@@ -33,10 +33,13 @@ class DepartmentView(ModelViewSet): # inheriting imported ModelViewSet into norm
 class ResourceView(GenericAPIView): #converting resourceview class into api view class through GenericAPIView
     queryset = Resource.objects.all()
     serializer_class = ResourceSerializer
+    filterset_fields = ['department'] #setting department field as a filterable field since it has a many to many relation and is a relation field on the resource table.
+    search_fields = ['name'] #the searching can be done only from the name field of the resource table logically.
     
     def get(self,request): # defining get method or function for the get request manually as no modelviewset is used. "self" parameter is compulsory on the method defined under a class. Since url will call this method, "request" parameter must be included for request and response cycle.
         queryset = self.get_queryset() # get_queryset method is defined in GenericAPIView if queryset object is defined in the class, get_queryset method calls the query from the queryset object. 
-        serializer = self.serializer_class(queryset, many = True) #making serializer variable that calls the serializer_class object or attribute. passing queryset which is object data as a positional argument inside the serializer_class to be converted into JSON and many=true states that the conversion takes place on more than one object by using for loop, i.e list of objects that lies in queryset.
+        filter_queryset = self.filter_queryset(queryset) #the queryset object is passed onto the filter_queryset method of DjangoFilterBackend module defined as default in settings.py that filters and returns the data according to the filteration criteria provided by the user. the filtered data is then received by the filter_queryset variable.
+        serializer = self.serializer_class(filter_queryset, many = True) #making serializer variable that calls the serializer_class object or attribute. passing filter_queryset which is object data as a positional argument inside the serializer_class to be converted into JSON and many=true states that the conversion takes place on more than one object by using for loop, i.e list of objects that lies in filter_queryset.
         return Response(serializer.data) #data is a property or method that does not require paranthesis which returns the converted JSON data of queryset object through the url in the form of response. response is imported from response module of rest framework API.
     
     def post(self,request):
